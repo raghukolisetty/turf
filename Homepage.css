@@ -1,0 +1,191 @@
+body {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f0f0f0;
+    font-family: Arial, sans-serif;
+}
+
+button {
+    font-weight: bold;
+}
+
+.carousel-slide {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 1000px;
+    height: 90vh;
+}
+
+@media (min-width: 768px) {
+    .carousel-slide {
+        flex-direction: row;
+    }
+}
+
+#centerContainer {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.8);
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    text-align: center;
+    z-index: 3;
+}
+
+#centerContainer::placeholder {
+    text-align: center;
+}
+
+.mobileNumber {
+    padding: 10px;
+    margin-bottom: 10px;
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.submitButton {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border-radius: 4px;
+}
+
+.submitButton:hover {
+    background-color: #0056b3;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+    ;
+}
+
+.hidden {
+    display: none;
+}
+
+.datePickerContainer {
+    margin-top: 20px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+}
+
+.datePickerContainer label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+#dateSelect {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.hourSlots {
+    max-height: 300px;
+    overflow-y: auto;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    padding: 10px;
+    background-color: #f9f9f9;
+}
+
+.hourSlot {
+    background-color: lightsteelblue;
+    border-radius: 20px;
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease, opacity 0.3s ease;
+}
+
+.hourSlot:hover {
+    background-color: #0056b3;
+    color: white;
+}
+
+.enabledSlot {
+    background-color: #ffffff;
+    color: #333333;
+    cursor: pointer;
+    border: 1px solid #ddd;
+    pointer-events: auto;
+    opacity: 1;
+}
+
+.disabledSlot {
+    background-color: #f2f2f2;
+    color: #a8a8a8;
+    cursor: not-allowed;
+    border: 1px solid #ddd;
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+
+.errorMessage {
+    color: red;
+    font-size: 12px;
+    margin-top: 5px;
+    display: none;
+}
+
+:root {
+    --primary-color: #007bff;
+    --primary-bg-color: #f0f8ff;
+}
+
+.hourWrapper {
+    display: flex;
+    ;
+    align-items: center;
+    gap: 8px;
+    border: 2px solid var(--primary-color);
+    border-radius: 4px;
+    padding: 5px 10px;
+    margin-bottom: 8px;
+    background-color: var(--primary-bg-color);
+}
+
+.hourCheckbox {
+    width: 18px;
+    height: 18px;
+}
+
+.nextButton {
+    background-color: lightblue;
+    color: black;
+}
+
+.slotUnAvailable {
+    background-color: lightgray;
+    border: none;
+}
+
+#messageElement {
+    padding: 10px;
+    margin: 10px, 0;
+    border-radius: 5px;
+    text-align: center;
+    font-size: 16px;
+}
