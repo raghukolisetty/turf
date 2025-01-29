@@ -1,4 +1,3 @@
-// const errorMessage = document.getElementById("errorMessage");
 const datePickerContainer = document.getElementById("datePickerContainer");
 const dateSelect = document.getElementById("dateSelect");
 const hourSlotsContainer = document.getElementById("hourSlots");
@@ -99,24 +98,23 @@ function generateHourlySlots(hours, blockedSlots, selectedDate) {
         hourSlotsContainer.appendChild(hourSlotsWrapper);
     });
 
-    const mobileNumberWrapper = document.createElement("div");
-    mobileNumberWrapper.classList.add("mobileNumberWrapper", "hidden");
+    const emailIdWrapper = document.createElement("div");
+    emailIdWrapper.classList.add("emailIdWrapper", "hidden");
 
-    const mobileNumberInput = document.createElement("input");
-    mobileNumberInput.type = "tel";
-    mobileNumberInput.id = "mobileNumberInput";
-    mobileNumberInput.placeholder = "Whatsapp Number";
-    mobileNumberInput.pattern = "/^[6-9]\d{9}$/";
-    mobileNumberWrapper.appendChild(mobileNumberInput);
+    const emailIdInput = document.createElement("input");
+    emailIdInput.type = "email";
+    emailIdInput.id = "emailIdInput";
+    emailIdInput.placeholder = "Your Email";
+    emailIdWrapper.appendChild(emailIdInput);
 
     const continueButton = document.createElement("button");
     continueButton.textContent = "Continue";
     continueButton.type = "button";
     continueButton.id = "continueButton";
     continueButton.disabled = true;
-    mobileNumberWrapper.appendChild(continueButton);
+    emailIdWrapper.appendChild(continueButton);
 
-    datePickerContainer.appendChild(mobileNumberWrapper);
+    datePickerContainer.appendChild(emailIdWrapper);
 
     const checkBoxes = document.querySelectorAll(".hourCheckbox");
     hourSlotsContainer.addEventListener("change", () => {
@@ -125,14 +123,14 @@ function generateHourlySlots(hours, blockedSlots, selectedDate) {
             .map(checkbox => checkbox.value);
 
         if (selectedSlots.length > 0) {
-            mobileNumberWrapper.classList.remove("hidden");
+            emailIdWrapper.classList.remove("hidden");
         } else {
-            mobileNumberWrapper.classList.add("hidden");
+            emailIdWrapper.classList.add("hidden");
         }
     });
 
-    mobileNumberInput.addEventListener("input", () => {
-        const isValid = /^[6-9]\d{9}$/.test(mobileNumberInput.value);
+    emailIdInput.addEventListener("input", () => {
+        const isValid = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(emailIdInput.value);
         continueButton.disabled = !isValid;
     });
 
@@ -141,13 +139,13 @@ function generateHourlySlots(hours, blockedSlots, selectedDate) {
             .filter(checkbox => checkbox.checked)
             .map(checkbox => checkbox.value);
 
-        const mobileNumber = mobileNumberInput.value;
+        const emailId = emailIdInput.value;
 
-        if (selectedDate && selectedSlots.length > 0 && /^[6-9]\d{9}$/.test(mobileNumber)) {
-            await sendSlots(selectedDate, selectedSlots, mobileNumber);
+        if (selectedDate && selectedSlots.length > 0) {
+            await sendSlots(selectedDate, selectedSlots, emailId);
             console.log("Slot booked successfully");
         } else {
-            console.log("Please enter a valid date, slot and enter a valid mobile number");
+            console.log("Please enter a valid date, slot and enter a valid email id");
         }
     });
 
@@ -155,19 +153,18 @@ function generateHourlySlots(hours, blockedSlots, selectedDate) {
     hourSlotsContainer.classList.remove("hidden");
 }
 
-async function sendSlots(selectedDate, selectedSlots, mobileNumber) {
+async function sendSlots(selectedDate, selectedSlots, emailId) {
     try {
         const response = await fetch("/api/reservations", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ date: selectedDate, slots: selectedSlots, mobileNumber: mobileNumber }),
+            body: JSON.stringify({ date: selectedDate, slots: selectedSlots, email: emailId }),
         });
-
+        
         if (response.ok) {
-            console.log(`Slot booked successfully on ${selectedDate} from ${selectedSlots}`)
-            displaySuccessMessage(`Slot booked successfully on ${selectedDate} from ${selectedSlots}`);
+            displaySuccessMessage(`Slot booked successfully on ${selectedDate} at ${selectedSlots}. Please check your email Inbox for Booking Details.`);
         } else {
             displayErrorMessage("Failed to Book slots. Please try again.");
             console.error("Failed to send slots. Server responded with:", response.statusText);
@@ -192,11 +189,11 @@ function displayMessage(message, type) {
     messageElement.textContent = message;
 
     centerContainer.append(messageElement);
-    
+
     messageElement.style.backgroundColor = type === "success" ? "#d4edda" : "#f8d7da";
     messageElement.style.border = type === "success" ? "1px solid #c3e6cb" : "1px solid #f5c6cb";
-    
-    // setTimeout(() => {
-    //     location.reload();
-    // }, 5000);
+
+    setTimeout(() => {
+        location.reload();
+    }, 5000);
 }

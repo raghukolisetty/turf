@@ -1,6 +1,8 @@
 const express = require("express");
 const path = require("path");
 const sqlite3 = require("sqlite3").verbose();
+const nodemailer = require("nodemailer");
+const dotenv = require('dotenv').config();
 
 const db = new sqlite3.Database("slots.db", (err) => {
     if (err) {
@@ -13,7 +15,7 @@ const db = new sqlite3.Database("slots.db", (err) => {
 db.serialize(() => {
     db.run(
         `CREATE TABLE IF NOT EXISTS Reservations (
-            CustomerMobileNumber TEXT, 
+            CustomerEmailID TEXT, 
             BookingDate TEXT NOT NULL, 
             CheckInTime TEXT, 
             CheckOutTime TEXT, 
@@ -34,6 +36,15 @@ const PORT = process.env.PORT || 5000;
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
+app.use(express.urlencoded({ extended: true }));
+
+const smtpTransport = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+        user: process.env.emailUser,
+        pass: process.env.emailPassword,
+    },
+});
 
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "Homepage.html"));
@@ -87,14 +98,30 @@ app.get("/api/blockedSlots/", (req, res) => {
 });
 
 app.post("/api/reservations/", (req, res) => {
-    const { date, slots, mobileNumber } = req.body;
-    if (!date || !slots || !Array.isArray(slots) || slots.length === 0 || !mobileNumber) {
+    const { date, slots, email } = req.body;
+    if (!date || !slots || !Array.isArray(slots) || slots.length === 0 || !email) {
         return res.status(400).json({ error: "invalid data format" });
     }
 
+    const emailOptions = {
+        from: "newmisc7777@gmail.com",
+        to: email,
+        subject: "Real Turf : Booking Success",
+        text: `Hello User, your slot has been booked successfully.\n Date: ${date}\n Time: ${slots}`,
+    };
+
+    smtpTransport.sendMail(emailOptions, (error, info) => {
+        if (error) {
+            console.error("Error sending email:", error);
+            return res.status(500).send("Error sending email");
+        }
+        console.log("Email sent to the user successfully:", info.response);
+        res.send("Success email sent successfully");
+    });
+
     const placeholders = slots.map(() => "(?, ?, ?)").join(", ");
-    const query = `INSERT INTO Reservations (BookingDate, CheckInTime, CustomerMobileNumber) VALUES ${placeholders}`;
-    const params = slots.flatMap(slot => [date, slot, mobileNumber]);
+    const query = `INSERT INTO Reservations (BookingDate, CheckInTime, CustomerEmailID) VALUES ${placeholders}`;
+    const params = slots.flatMap(slot => [date, slot, email]);
 
     db.run(query, params, function (err) {
         if (err) {
