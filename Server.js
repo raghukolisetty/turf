@@ -55,7 +55,7 @@ function getBlockedSlots(date, callback) {
     db.all(query, [date], (err, rows) => {
         if (err) {
             console.error("Error fetching blocked slots:", err.message);
-            callback([]);
+            return callback([]);
         } else {
             const blockedSlots = rows.map(row => row.CheckInTime);
             callback(blockedSlots);
@@ -99,50 +99,76 @@ app.get("/api/blockedSlots/", (req, res) => {
 
 app.post("/api/reservations/", (req, res) => {
     const { date, slots, email } = req.body;
+
     if (!date || !slots || !Array.isArray(slots) || slots.length === 0 || !email) {
-        return res.status(400).json({ error: "invalid data format" });
+        return res.status(400).json({ error: "Invalid data format" });
     }
 
+    // Convert received date from DD-MM-YYYY format to a Date object
     const [day, month, year] = date.split("-").map(Number);
-    const bookingDate = new Date(year, month - 1, day);
+    const bookingDate = new Date(year, month - 1, day); // Month is 0-based in JavaScript
 
+    // Get today's date without the time
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    // Get the maximum allowed booking date (today + 6 days)
     const maxAllowedDate = new Date();
-    maxAllowedDate.setDate(maxAllowedDate.getDate() + 6);
+    maxAllowedDate.setDate(today.getDate() + 6);
 
+    // Validation: Ensure booking date is within allowed range
     if (bookingDate < today || bookingDate > maxAllowedDate) {
-        return res.status(400).json({ error: "Invalid booking date. Date must be between today and the next 6 days."});
+        return res.status(400).json({ error: "Invalid booking date. Booking must be between today and the next 6 days." });
     }
 
-    const emailOptions = {
-        from: "newmisc7777@gmail.com",
-        to: email,
-        subject: "Real Turf : Booking Success",
-        text: `Hello User, your slot has been booked successfully.\n Date: ${date}\n Time: ${slots}`,
-    };
+    // Fetch blocked slots for the given date
+    const queryBlockedSlots = `SELECT CheckInTime FROM Reservations WHERE BookingDate = ?`;
 
-    smtpTransport.sendMail(emailOptions, (error, info) => {
-        if (error) {
-            console.error("Error sending email:", error);
-            return res.status(500).send("Error sending email");
-        }
-        console.log("Email sent to the user successfully:", info.response);
-        res.send("Success email sent successfully");
-    });
-
-    const placeholders = slots.map(() => "(?, ?, ?)").join(", ");
-    const query = `INSERT INTO Reservations (BookingDate, CheckInTime, CustomerEmailID) VALUES ${placeholders}`;
-    const params = slots.flatMap(slot => [date, slot, email]);
-
-    db.run(query, params, function (err) {
+    db.all(queryBlockedSlots, [date], (err, rows) => {
         if (err) {
-            console.error("Error inserting reservations:", err.message);
-            return res.status(500).json({ error: "Failed to save reservations." });
+            console.error("Error fetching blocked slots:", err.message);
+            return res.status(500).json({ error: "Failed to check blocked slots." });
         }
-        res.status(200).json({ message: "Reservations saved successfully" });
-        console.log("Reservations saved successfully");
+
+        // Get all blocked slots for the given date
+        const blockedSlots = rows.map(row => row.CheckInTime);
+
+        // Check if any requested slot is already blocked
+        const isSlotBlocked = slots.some(slot => blockedSlots.includes(slot));
+
+        if (isSlotBlocked) {
+            return res.status(400).json({ error: "One or more selected slots are already booked. Please choose another time." });
+        }
+
+        // Email sending logic
+        const emailOptions = {
+            from: "newmisc7777@gmail.com",
+            to: email,
+            subject: "Real Turf : Booking Success",
+            text: `Hello User, your slot has been booked successfully.\n Date: ${date}\n Time: ${slots}`,
+        };
+
+        smtpTransport.sendMail(emailOptions, (error, info) => {
+            if (error) {
+                console.error("Error sending email:", error);
+                return res.status(500).send("Error sending email");
+            }
+            console.log("Email sent to the user successfully:", info.response);
+        });
+
+        // Insert reservation into database
+        const placeholders = slots.map(() => "(?, ?, ?)").join(", ");
+        const queryInsert = `INSERT INTO Reservations (BookingDate, CheckInTime, CustomerEmailID) VALUES ${placeholders}`;
+        const params = slots.flatMap(slot => [date, slot, email]);
+
+        db.run(queryInsert, params, function (err) {
+            if (err) {
+                console.error("Error inserting reservations:", err.message);
+                return res.status(500).json({ error: "Failed to save reservations." });
+            }
+            res.status(200).json({ message: "Reservations saved successfully" });
+            console.log("Reservations saved successfully");
+        });
     });
 });
 
