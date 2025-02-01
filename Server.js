@@ -103,6 +103,19 @@ app.post("/api/reservations/", (req, res) => {
         return res.status(400).json({ error: "invalid data format" });
     }
 
+    const [day, month, year] = date.split("-").map(Number);
+    const bookingDate = new Date(year, month - 1, day);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const maxAllowedDate = new Date();
+    maxAllowedDate.setDate(maxAllowedDate.getDate() + 6);
+
+    if (bookingDate < today || bookingDate > maxAllowedDate) {
+        return res.status(400).json({ error: "Invalid booking date. Date must be between today and the next 6 days."});
+    }
+
     const emailOptions = {
         from: "newmisc7777@gmail.com",
         to: email,

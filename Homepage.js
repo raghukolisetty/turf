@@ -66,7 +66,7 @@ function generateHourlySlots(hours, blockedSlots, selectedDate) {
     hourSlotsContainer.innerHTML = "";
     const now = new Date();
     const currentHour = now.getHours();
-    const currentDate = `${now.getDate()}-${String(now.getMonth() + 1).padStart(2, "0")}-${now.getFullYear()}`;
+    const currentDate = `${String(now.getDate()).padStart(2, "0")}-${String(now.getMonth() + 1).padStart(2, "0")}-${now.getFullYear()}`;
 
     hours.forEach(hourString => {
         const hour = parseInt(hourString.split(":")[0], 10);
